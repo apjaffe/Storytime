@@ -1,5 +1,5 @@
-var fs = require('fs');
-var https = require('https');
+//var fs = require('fs');
+//var https = require('https');
 var http = require('http');
 var express = require('express');
 var request = require('request');
@@ -7,10 +7,10 @@ var story = require('./text');
 var srequest = require('sync-request');
 var app = express();
 
-var privateKey = fs.readFileSync('server.key','utf8');
-var certificate = fs.readFileSync('server.crt','utf8');
+//var privateKey = fs.readFileSync('server.key','utf8');
+//var certificate = fs.readFileSync('server.crt','utf8');
 
-var credentials = {key: privateKey, cert: certificate};
+//var credentials = {key: privateKey, cert: certificate};
 
 var initJSON={"chosenClues":[false,false,false,false,false],"clueCount":0,"exclude":{}};
 var mapUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCbFrbx4bfxB51Q8qO7sMbTtVQitGDQM8A&location=$lat%2C$lng&rankby=distance&types=$types";
