@@ -1,5 +1,6 @@
 var arrivedAt = ["You've arrived at ","You're at ","Welcome to "];
 var clues = [];
+var firstClue = "Yo.";
 clues[0] = "This story begins at a creepy location. Something scary happened. Will you go to $goto1 or $goto2?";
 clues[1] = "Looking around carefully, you $notice. Approaching closer, you find a handwritten note, recently dropped on the ground. As you reach to pick it up, $ominous. The note is written in $handwriting that seems somehow familiar. \"I'll meet you at $goto1,\" the note reads. \"Just stay away from $goto2.\"";
 clues[2] = "A $person approaches you. \"I knew I'd find you here,\" he says, looking around cautiously. Come this way.";
@@ -32,14 +33,19 @@ function substituteRandom(str)
 exports.onNewLandmark = function (json, a_or_b, landmark, cals, goto1, goto2) {
 	var chosenClues = json.chosenClues;
 	var response="";
+	var clue="";
 	if(landmark!==null)
 	{
 		chosenClues[json.clueCount] = a_or_b;
 		json.clueCount++;
 		response += pickRandom(arrivedAt) + landmark;
 		response += ". ";
+		clue = clues[json.clueCount+chosenClues[json.clueCount]]; //the relevant clue
 	}
-	var clue = clues[json.clueCount+chosenClues[json.clueCount]]; //the relevant clue
+	else
+	{
+		clue=firstClue;
+	}
 	response += substituteRandom(clue).replace("$landmark",landmark).replace("$cals",cals).replace("$goto1",goto1).replace("$goto2",goto2);
 
 	//response += "Now go to " + goto1 + " to find out what happens to" + x;

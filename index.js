@@ -4,7 +4,8 @@ var story = require('./text')
 var app = express();
 
 var initJSON={"chosenClues":[false,false,false,false,false],"clueCount":0};
-var mapUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCbFrbx4bfxB51Q8qO7sMbTtVQitGDQM8A&location=$lat%2C$lng&radius=800&mode=walking";
+var mapUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCbFrbx4bfxB51Q8qO7sMbTtVQitGDQM8A&location=$lat%2C$lng&rankby=distance&types=$types";
+var types="establishment|museum|park|library|restaurant|food";
 
 app.set('port', (process.env.PORT || 8080))
 app.use(express.static(__dirname + '/public'))
@@ -22,7 +23,7 @@ function cleanLatLng(json)
 //callback(goto1,goto2);
 function getLandmarkChoices(lat,lng,callback)
 {
-	var url = mapUrl.replace("$lng",lng).replace("$lat",lat);
+	var url = mapUrl.replace("$lng",lng).replace("$lat",lat).replace("$types",types);;
 	request.get(url,function(error, response, body)
 	{
 		if(!error && response.statusCode == 200)
@@ -35,6 +36,7 @@ function getLandmarkChoices(lat,lng,callback)
 			}
 			else
 			{
+				//console.log(body);
 				callback(null);
 			}
 		}
