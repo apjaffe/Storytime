@@ -17,14 +17,15 @@ clueCount = 0;
 
 exports.onNewLandmark = function (a_or_b, landmark, cals, goto1, goto2) {
 	chosenClues[clueCount] = a_or_b;
-	var response;
-	response += arrivedAt[Math.floor(Math.random*arrivedAt.length)] + landmark;
+	var response="";
+	response += arrivedAt[Math.floor(Math.random()*arrivedAt.length)] + landmark;
 	clue = clues[clueCount+chosenClues[clueCount]]; //the relevant clue
-	response += clue.replace("$",landmark).replace("%",cals);
-	response += "Now go to " + goto1 + " to find out what happens to" + x;
-	response += " or go to " + goto2 + " to find out what happens to" + y;
-	response += "If you had gone to " + goto1 + "you would've discovered that " + CLUE;
-
+	console.log(clue,clueCount,chosenClues);
+	response += clue.replace("$landmark",landmark).replace("$cals",cals).replace("$goto1",goto1).replace("$goto2",goto2);
+	//response += "Now go to " + goto1 + " to find out what happens to" + x;
+	//response += " or go to " + goto2 + " to find out what happens to" + y;
+	//response += "If you had gone to " + goto1 + "you would've discovered that " + CLUE;
+	return response;
     //if final text
 }
 
