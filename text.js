@@ -1,7 +1,7 @@
 var arrivedAt = ["You've arrived at ","You're at ","Welcome to "];
 var clues = [];
 
-var firstClue = "Today we'll be following the story of Clayton Edmond, a $person from New England. He was a middle-aged and tired professor. Why is he in $city today? All we know is that his girlfriend wanted to meet him at $goto1, but his boss had a meeting scheduled with him at $goto2. Go to either to find a clue."
+var firstClue = "Your lucky number is $cals. Today we'll be following the story of Clayton Edmond, a $person from New England. He was a middle-aged and tired professor. Why is he in $city today? All we know is that his girlfriend wanted to meet him at $goto1, but his boss had a meeting scheduled with him at $goto2. Go to either to find a clue."
 clues[0] = "Clayton's girlfriend, Mariah, was pacing back and forth when he got here 7 hours ago. \"Why in the world would you call Jason, she cried. He's already on his way. Get to either of the two safehouses that I set up for you: $goto1 or $goto2."
 clues[1] = "Looking around carefully,he $notice. Approaching closer, he found a handwritten note, recently dropped on the ground. As he reached to pick it up, $ominous. The note is written in $handwriting that seems somehow familiar. \"I'll meet you at $goto1,\" the note reads. \"Just stay away from $goto2.\"";
 clues[2] = "$landmark wasn’t at all what Clayton expected. Mariah lied to him! Jason was sitting on a bench right here when Jason walked in 4 hours ago, and $ominous. \”It’s over,\” he thought. \”I’m done for.\” Jason escorted Clayton to $goto1, and dropped something you can find. Then, he brought Clayton to $goto2, and also haphazardly dropped something. You can only go to one. Go!"
@@ -51,7 +51,7 @@ exports.onNewLandmark = function (json, a_or_b, landmark, cals, goto1, goto2, ci
 	{
 		clue=firstClue;
 	}
-	response += substituteRandom(clue).replace("$landmark",landmark).replace("$cals",cals).replace("$goto1",goto1).replace("$goto2",goto2).replace("$city",city);
+	response += substituteRandom(clue).replace("$landmark",landmark).replace("$cals",cals).replace("$goto1",goto1).replace("$goto2",goto2).replace("$city",city).replace("$cals",cals);
 
 	//response += "Now go to " + goto1 + " to find out what happens to" + x;
 	//response += " or go to " + goto2 + " to find out what happens to" + y;

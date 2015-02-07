@@ -13,11 +13,18 @@ var port = process.env.PORT || 8080;
 //var certificate = fs.readFileSync('server.crt','utf8');
 
 //var credentials = {key: privateKey, cert: certificate};
-
-var initJSON={"chosenClues":[false,false,false,false,false],"clueCount":0,"exclude":{}};
-var mapUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCbFrbx4bfxB51Q8qO7sMbTtVQitGDQM8A&location=$lat%2C$lng&rankby=distance&types=$types";
+var DEFAULT_DIST=200;
+var initJSON={"chosenClues":[false,false,false,false,false],"clueCount":0,"exclude":{},"distance":DEFAULT_DIST};
+var mapUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCbFrbx4bfxB51Q8qO7sMbTtVQitGDQM8A&location=$lat%2C$lng&radius=$distance"
+//&rankby=distance&types=$types";
 var types="establishment|museum|park|library|restaurant|food";
 var cityUrl = "https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat%2C$lng&key=AIzaSyCbFrbx4bfxB51Q8qO7sMbTtVQitGDQM8A&result_type=locality";
+
+var clientId="QGJOGGvh8Ag";
+var appSecret="0fb1df41c2fd3ef281b86370ca8d4369b9d5ea71";
+var authUrl="https://jawbone.com/auth/oauth2/token?grant_type=authorization_code&client_id="+clientId+"&client_secret="+appSecret+"&code=$code";
+var jawboneUrl="https://jawbone.com/nudge/api/v.1.1/users/@me/moves?start_time=$start";
+var jawboneGoalUrl="https://jawbone.com/nudge/api/v1.1/user/@me/goals";
 
 app.set('port', (process.env.PORT || 8080))
 app.use(express.static(__dirname + '/public'))
@@ -47,15 +54,60 @@ function getCity(lat,lng)
 	}
 }
 
+function getDistance(token)
+{
+	if(!token)
+	{
+		return DEFAULT_DIST;
+	}
+	var url = jawboneGoalUrl;
+	var options =
+	{
+		"headers":{'Authorization: Bearer':token}
+	};
+	var res = srequest('GET',url,options);
+	var body = JSON.parse(res.getBody().toString());
+	if(body)
+	{
+		var steps = body.data.remaining_for_day.move_steps_remaining;
+		return Math.max(steps/5,DEFAULT_DIST);
+	}
+	else
+	{
+		return DEFAULT_DIST;
+	}
+}
+
 function cleanUrl(url)
 {
 	return url.replace(/&/g," and ");
 }
 
-//callback(goto1,goto2);
-function getLandmarkChoices(lat,lng,exclude,callback)
+//callback(cals,...)
+function getUpData(token,startTime,callback)
 {
-	var url = mapUrl.replace("$lng",lng).replace("$lat",lat).replace("$types",types);;
+	var url = jawboneUrl.replace("$start$",startTime);
+	var options = {
+		url: url,
+		headers: {'Authorization: Bearer':token}
+	};
+	request(options,function(error,response,body)
+	{
+		if(!error && response.statusCode==200)
+		{
+			var results = JSON.parse(body).data;
+			var details = results.items[0].details;
+			callback(details.calories);
+		}
+	});
+}
+
+
+
+//callback(goto1,goto2);
+function getLandmarkChoices(lat,lng,distance,exclude,callback)
+{
+	var url = mapUrl.replace("$lng",lng).replace("$lat",lat).replace("$types",types).replace("$distance",distance);
 	request.get(url,function(error, response, body)
 	{
 		if(!error && response.statusCode == 200)
@@ -94,12 +146,31 @@ function getLandmarkChoices(lat,lng,exclude,callback)
 			}
 			else
 			{
-				//console.log(body);
+				console.log(url);
+				console.log(body);
 				callback(null);
 			}
 		}
 	});
 }
+
+app.get('/auth', function(req, res)
+{
+	var url = authUrl.replace("$code",req.query.token);
+	console.log(url);
+	request.get(url,function(error, response, body)
+	{
+		if(!error && response.statusCode == 200)
+		{
+			res.send(body);
+		}
+		else
+		{
+			res.send("Invalid token");
+			console.log(body);
+		}
+	});
+});
 
 app.get('/story', function(req, res)
 {
@@ -108,6 +179,7 @@ app.get('/story', function(req, res)
 	{
 		json = JSON.parse(JSON.stringify(initJSON));
 		json.city = getCity(req.query.lat,req.query.lng);
+		json.distance = getDistance(req.query.token);
 	}
 	else
 	{
@@ -130,23 +202,33 @@ app.get('/story', function(req, res)
 		landmark = a_or_b?json.goto[0].name:json.goto[1].name;
 		json.exclude[landmark]=true;
 	}
-	getLandmarkChoices(req.query.lat,req.query.lng,json.exclude,function(goto1,goto2)
+	getLandmarkChoices(req.query.lat,req.query.lng,json.distance,json.exclude,function(goto1,goto2)
 	{
-		var text="";
-		if(goto1===null)
+		var callback = function(cals)
 		{
-			text=("You live in a boring place. Sorry.");
+			var text="";
+			if(goto1===null)
+			{
+				text=("You live in a boring place. Sorry.");
+			}
+			else
+			{
+				text = story.onNewLandmark(json,a_or_b,landmark,cals,goto1.name,goto2.name,json.city);
+				json.goto = [cleanLatLng(goto1),cleanLatLng(goto2)];
+			}
+			var obj={};
+			obj.json=json;
+			obj.text=text;
+			res.send(JSON.stringify(obj));
+		};
+		if(req.query.token)
+		{
+			getUpData(req.query.token,req.query.startTime);
 		}
 		else
 		{
-			var cals = 0;//req.query.cals;
-			text = story.onNewLandmark(json,a_or_b,landmark,cals,goto1.name,goto2.name,json.city);
-			json.goto = [cleanLatLng(goto1),cleanLatLng(goto2)];
+			callback(0);
 		}
-		var obj={};
-		obj.json=json;
-		obj.text=text;
-		res.send(JSON.stringify(obj));
 	});
 })
 var httpServer = http.createServer(app);
