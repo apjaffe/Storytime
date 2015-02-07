@@ -53,10 +53,6 @@ exports.onNewLandmark = function (json, a_or_b, landmark, cals, goto1, goto2, ci
 	}
 	response += substituteRandom(clue).replace("$landmark",landmark).replace("$cals",cals).replace("$goto1",goto1).replace("$goto2",goto2).replace("$city",city).replace("$cals",cals);
 
-	//response += "Now go to " + goto1 + " to find out what happens to" + x;
-	//response += " or go to " + goto2 + " to find out what happens to" + y;
-	//response += "If you had gone to " + goto1 + "you would've discovered that " + CLUE;
 	return response;
-    //if final text
 }
 

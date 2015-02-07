@@ -23,8 +23,15 @@ var cityUrl = "https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat%2C$
 var clientId="QGJOGGvh8Ag";
 var appSecret="0fb1df41c2fd3ef281b86370ca8d4369b9d5ea71";
 var authUrl="https://jawbone.com/auth/oauth2/token?grant_type=authorization_code&client_id="+clientId+"&client_secret="+appSecret+"&code=$code";
-var jawboneUrl="https://jawbone.com/nudge/api/v.1.1/users/@me/moves?start_time=$start";
-var jawboneGoalUrl="https://jawbone.com/nudge/api/v1.1/user/@me/goals";
+var jawboneUrl="https://jawbone.com/nudge/api/v.1.1/users/@me/moves?start_time=$start&end_time=$end";
+var jawboneGoalUrl="https://jawbone.com/nudge/api/v.1.1/users/@me/goals";
+
+var oauth2 = require('simple-oauth2')({
+	clientID: clientId,
+    	clientSecret: appSecret,
+    	site: "https://jawbone.com/auth",
+    	tokenPath: "/oauth2/token"
+});
 
 app.set('port', (process.env.PORT || 8080))
 app.use(express.static(__dirname + '/public'))
@@ -63,7 +70,7 @@ function getDistance(token)
 	var url = jawboneGoalUrl;
 	var options =
 	{
-		"headers":{'Authorization: Bearer':token}
+		"headers":{'Authorization':'Bearer '+token}
 	};
 	var res = srequest('GET',url,options);
 	var body = JSON.parse(res.getBody().toString());
@@ -86,18 +93,25 @@ function cleanUrl(url)
 //callback(cals,...)
 function getUpData(token,startTime,callback)
 {
-	var url = jawboneUrl.replace("$start$",startTime);
+	var url = jawboneUrl.replace("$start",startTime).replace("$end",(new Date())*1);
 	var options = {
 		url: url,
-		headers: {'Authorization: Bearer':token}
+		headers: {'Authorization':'Bearer '+token}
 	};
 	request(options,function(error,response,body)
 	{
 		if(!error && response.statusCode==200)
 		{
 			var results = JSON.parse(body).data;
-			var details = results.items[0].details;
-			callback(details.calories);
+			if(results.items.length>0)
+			{
+				var details = results.items[0].details;
+				callback(details.calories);
+			}
+			else
+			{
+				callback(0);
+			}
 		}
 	});
 }
@@ -154,32 +168,50 @@ function getLandmarkChoices(lat,lng,distance,exclude,callback)
 	});
 }
 
+app.get('/storytime', function(req, res)
+{
+	res.redirect('Storytime://redirect');
+});
+
 app.get('/auth', function(req, res)
 {
-	var url = authUrl.replace("$code",req.query.token);
-	console.log(url);
+	var code = req.query.token;
+	console.log(code);
+	oauth2.authCode.getToken({
+		code: code,
+		redirect_uri: "http://apjaffe.res.cmu.edu:8080/auth",
+	}, saveToken);
+	function saveToken(error, result) {
+		if(error) {console.log('Access Token Error', error.message); }
+		var token = oauth2.accessToken.create(result);
+		console.log(token);
+		res.send(token);
+	}
+	//var url = authUrl.replace("$code",req.query.token);
+	/*console.log(url);
 	request.get(url,function(error, response, body)
 	{
 		if(!error && response.statusCode == 200)
 		{
-			res.send(body);
+			res.send(JSON.parse(body)["access_token"]);
 		}
 		else
 		{
 			res.send("Invalid token");
 			console.log(body);
 		}
-	});
+	});*/
 });
 
 app.get('/story', function(req, res)
 {
+	var token = "Je5CDuGC9ORC4cl7Pjbm9VRvi3Y91HRivnfZEc5cq-Np7ZBEJ02H_yqsxhR8Grfth6U3udc825T7HNtl_NYFMVECdgRlo_GULMgGZS0EumxrKbZFiOmnmAPChBPDZ5JP";
 	var jsonstr = req.query.json;
 	if(jsonstr===undefined || jsonstr===null)
 	{
 		json = JSON.parse(JSON.stringify(initJSON));
 		json.city = getCity(req.query.lat,req.query.lng);
-		json.distance = getDistance(req.query.token);
+		json.distance = getDistance(token);
 	}
 	else
 	{
@@ -221,9 +253,9 @@ app.get('/story', function(req, res)
 			obj.text=text;
 			res.send(JSON.stringify(obj));
 		};
-		if(req.query.token)
+		if(token || req.query.token)
 		{
-			getUpData(req.query.token,req.query.startTime);
+			getUpData(token,req.query.startTime,callback);
 		}
 		else
 		{
