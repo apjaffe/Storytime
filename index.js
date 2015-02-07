@@ -3,8 +3,8 @@ var request = require('request');
 var story = require('./text')
 var app = express();
 
-var initJSON={"chosenClues":[false,false,false,false],"landmark":"your home","clueCount":0};
-var mapUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCbFrbx4bfxB51Q8qO7sMbTtVQitGDQM8A&location=$lat%2C$lng&radius=1600&mode=walking";
+var initJSON={"chosenClues":[false,false,false,false,false],"clueCount":0};
+var mapUrl = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=AIzaSyCbFrbx4bfxB51Q8qO7sMbTtVQitGDQM8A&location=$lat%2C$lng&radius=800&mode=walking";
 
 app.set('port', (process.env.PORT || 8080))
 app.use(express.static(__dirname + '/public'))
@@ -41,10 +41,17 @@ function getLandmarkChoices(lat,lng,callback)
 	});
 }
 
-app.get('/story', function(req, res) {
-	var json = req.query.json;
-	if(json===undefined || json===null)
+app.get('/story', function(req, res)
+{
+	var jsonstr = req.query.json;
+	if(jsonstr===undefined || jsonstr===null)
+	{
 		json = JSON.parse(JSON.stringify(initJSON));
+	}
+	else
+	{
+		json = JSON.parse(jsonstr);
+	}
 	getLandmarkChoices(req.query.lat,req.query.lng,function(goto1,goto2)
 	{
 		var text="";
@@ -54,12 +61,17 @@ app.get('/story', function(req, res) {
 		}
 		else
 		{
-			var a_or_b = toBoolean(req.query.a_or_b);
-			var landmark = json.landmark;
+			var a_or_b = false;;
+			var landmark = null;
+			if(req.query.a_or_b)
+			{
+				a_or_b = toBoolean(req.query.a_or_b);
+				landmark = a_or_b?json.goto[0].name:json.goto[1].name;
+			}
+
 			var cals = 0;//req.query.cals;
 			text = story.onNewLandmark(json,a_or_b,landmark,cals,goto1.name,goto2.name);
-			json.goto1=cleanLatLng(goto1);
-			json.goto2=cleanLatLng(goto2);
+			json.goto = [cleanLatLng(goto1),cleanLatLng(goto2)];
 		}
 		var obj={};
 		obj.json=json;
