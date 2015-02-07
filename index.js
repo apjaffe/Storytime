@@ -7,6 +7,8 @@ var story = require('./text');
 var srequest = require('sync-request');
 var app = express();
 
+var port = process.env.PORT || 8080;
+
 //var privateKey = fs.readFileSync('server.key','utf8');
 //var certificate = fs.readFileSync('server.crt','utf8');
 
@@ -149,7 +151,7 @@ app.get('/story', function(req, res)
 })
 var httpServer = http.createServer(app);
 //var httpsServer = https.createServer(credentials,app);
-httpServer.listen(8080);
+httpServer.listen(port);
 console.log("Node app is running");
 //httpsServer.listen(443);
 //app.listen(app.get('port'), function() {
