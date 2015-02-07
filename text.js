@@ -15,11 +15,8 @@ clues[9] = "";
 var chosenClues = [false,false,false,false,false];
 clueCount = 0;
 
-function onNewLandmark (a_or_b, clueCount) {
+exports.onNewLandmark = function (a_or_b, landmark, cals, goto1, goto2) {
 	chosenClues[clueCount] = a_or_b;
-}
-
-function returnText (landmark, cals, goto1, goto2) {
 	var response;
 	response += arrivedAt[Math.floor(Math.random*arrivedAt.length)] + landmark;
 	clue = clues[clueCount+chosenClues[clueCount]]; //the relevant clue
@@ -27,8 +24,7 @@ function returnText (landmark, cals, goto1, goto2) {
 	response += "Now go to " + goto1 + " to find out what happens to" + x;
 	response += " or go to " + goto2 + " to find out what happens to" + y;
 	response += "If you had gone to " + goto1 + "you would've discovered that " + CLUE;
+
+    //if final text
 }
 
-function finalText() {
-	clue[0] + 
-}
