@@ -108,7 +108,7 @@ function getUpData(token,startTime,callback)
 			if(results.items.length>0)
 			{
 				var details = results.items[0].details;
-				callback(details.calories);
+				callback(Math.floor(details.calories));
 			}
 			else
 			{
@@ -247,6 +247,7 @@ app.get('/story', function(req, res)
 			}
 			else
 			{
+				console.log(cals);
 				text = story.onNewLandmark(json,a_or_b,landmark,cals,goto1.name,goto2.name,json.city, json.distance*5);
 				json.goto = [cleanLatLng(goto1),cleanLatLng(goto2)];
 			}
