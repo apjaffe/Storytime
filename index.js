@@ -23,8 +23,10 @@ var cityUrl = "https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat%2C$
 var clientId="QGJOGGvh8Ag";
 var appSecret="0fb1df41c2fd3ef281b86370ca8d4369b9d5ea71";
 var authUrl="https://jawbone.com/auth/oauth2/token?grant_type=authorization_code&client_id="+clientId+"&client_secret="+appSecret+"&code=$code";
-var jawboneUrl="https://jawbone.com/nudge/api/v.1.1/users/@me/moves?start_time=$start&end_time=$end";
+var jawboneUrl="https://jawbone.com/nudge/api/v.1.1/users/@me/moves";//?start_time=$start&end_time=$end";
 var jawboneGoalUrl="https://jawbone.com/nudge/api/v.1.1/users/@me/goals";
+
+var showCalories=true;
 
 var oauth2 = require('simple-oauth2')({
 	clientID: clientId,
@@ -245,7 +247,7 @@ app.get('/story', function(req, res)
 			}
 			else
 			{
-				text = story.onNewLandmark(json,a_or_b,landmark,cals,goto1.name,goto2.name,json.city);
+				text = story.onNewLandmark(json,a_or_b,landmark,cals,goto1.name,goto2.name,json.city, json.distance*5);
 				json.goto = [cleanLatLng(goto1),cleanLatLng(goto2)];
 			}
 			var obj={};
@@ -253,7 +255,7 @@ app.get('/story', function(req, res)
 			obj.text=text;
 			res.send(JSON.stringify(obj));
 		};
-		if(token || req.query.token)
+		if(showCalories && (token || req.query.token))
 		{
 			getUpData(token,req.query.startTime,callback);
 		}
